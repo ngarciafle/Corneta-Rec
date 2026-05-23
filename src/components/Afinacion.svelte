@@ -2,6 +2,6 @@
 
 </script>
 
-<div class="bg-black w-100 h-100">
+<div class="">
     <p>afinacion</p>
 </div>
