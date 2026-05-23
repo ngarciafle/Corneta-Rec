@@ -2,4 +2,6 @@
 
 </script>
 
-<p>configuracion</p>
+<header>
+    <p>configuracion</p>
+</header>
