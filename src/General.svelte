@@ -1,14 +1,36 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { YIN } from "pitchfinder";
+    import Meyda from "meyda";
 
     import Configuracion from "./components/Configuracion.svelte";
     import Afinacion from "./components/Afinacion.svelte";
     import Nota from "./components/Nota.svelte";
 
+    // Reactive variables
+    let isListening: boolean = $state(false);
+    let freqHz: number = $state(0);
+    let noteTxt: string = $state('---');
+    let desviation: number = $state(0);
+
+    // Audio configuration variables
+    let cornetaType: string = $state('Do');
+    let boquillaMode: boolean = $state(false);
+
+    // Internal variables
+    let detectPitch: any;
+
     onMount(() => {
-        
+        detectPitch = YIN({ sampleRate: 44100 });
+
+        return () => {
+            stopAudio();
+        }
     })
+
+    function stopAudio() {
+
+    }
 </script>
 
 <div class="w-full h-lvh md:grid grid-rows-[15%_85%]">
