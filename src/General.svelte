@@ -35,7 +35,7 @@
 
 <div class="w-full h-lvh md:grid grid-rows-[15%_85%]">
     <div class="flex items-center justify-center">
-        <Configuracion />
+        <Configuracion cornetaType={cornetaType} boquillaMode={boquillaMode} />
     </div>
 
     <div class="grid grid-cols-2 gap-4">
