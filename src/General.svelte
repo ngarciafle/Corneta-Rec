@@ -14,7 +14,6 @@
     let desviation: number = $state(0);
 
     // Audio configuration variables
-    let cornetaType: string = $state('Do');
     let boquillaMode: boolean = $state(false);
 
     // Internal variables
@@ -35,11 +34,12 @@
 
 <div class="w-full h-lvh md:grid grid-rows-[15%_85%]">
     <div class="flex items-center justify-center">
-        <Configuracion cornetaType={cornetaType} boquillaMode={boquillaMode} />
+        <Configuracion boquillaMode={boquillaMode} />
     </div>
 
-    <div class="grid grid-cols-2 gap-4">
+    <div class="grid grid-cols-[49%_2%_49%] gap-4">
         <Afinacion />
+        <div class="h-full w-[.5px] -[0.5px] bg-[#76ABAE]"></div>
         <Nota />
     </div>
 </div>
