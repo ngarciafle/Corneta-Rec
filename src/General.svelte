@@ -119,6 +119,15 @@
     <div class="grid grid-cols-[49%_2%_49%] gap-4">
         <Afinacion />
         <div class="h-full w-[.5px] -[0.5px] bg-[#76ABAE]"></div>
-        <Nota />
+        <div>
+            <Nota noteTxt={noteTxt} />
+            <button
+                onclick={micConm}
+                class="px-8 py-4 rounded-2xl font-black text-lg tracking-wide shadow-2xl transition-all duration-250 transform active:scale-95
+                        {isListening ? 'bg-red-500 hover:bg-red-400 text-white shadow-red-500/20' : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/20'}"
+                >
+                {isListening ? 'Detener' : 'Encender Micrófono'}
+            </button>
+        </div>
     </div>
 </div>
