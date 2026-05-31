@@ -3,4 +3,4 @@
 </script>
 
 
-<p class="text-4xl font-bold text-center">{noteTxt}</p>
+<p class="text-4xl font-bold text-center mb-8">{noteTxt}</p>

@@ -111,23 +111,34 @@
 
 </script>
 
-<div class="w-full h-lvh md:grid grid-rows-[15%_85%]">
-    <div class="flex items-center justify-center">
-        <Configuracion boquillaMode={boquillaMode} />
-    </div>
+<div class="w-full min-h-screen flex flex-col">
+    <Configuracion bind:boquillaMode />
 
-    <div class="grid grid-cols-[49%_2%_49%] gap-4">
-        <Afinacion />
-        <div class="h-full w-[.5px] -[0.5px] bg-[#76ABAE]"></div>
-        <div>
-            <Nota noteTxt={noteTxt} />
-            <button
-                onclick={micConm}
-                class="px-8 py-4 rounded-2xl font-black text-lg tracking-wide shadow-2xl transition-all duration-250 transform active:scale-95
-                        {isListening ? 'bg-red-500 hover:bg-red-400 text-white shadow-red-500/20' : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/20'}"
-                >
-                {isListening ? 'Detener' : 'Encender Micrófono'}
-            </button>
+    <main class="flex-1 grid grid-cols-2 divide-x divide-teal-800/40 p-8">
+        <div class="flex flex-col items-center justify-center gap-8 px-8">
+            <Afinacion />
         </div>
-    </div>
+
+        <div class="flex flex-col items-center justify-center gap-8 px-8">
+            <Nota {noteTxt}  />
+
+            {#if isListening}
+                <button
+                    onclick={micConm}
+                    class="flex items-center gap-3 px-8 py-3 rounded-full border border-red-800 text-red-850 text-sm tracking-widest font-serif cursor-pointer hover:border-red-600 hover:bg-zinc-100 transition-colors"
+                >
+                    <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                    Detener
+                </button>
+            {:else}
+                <button
+                    onclick={micConm}
+                    class="flex items-center gap-3 px-8 py-3 rounded-full border border-zinc-200 text-sm tracking-widest font-serif cursor-pointer hover:border-teal-700 hover:bg-zinc-100 transition-colors"
+                >
+                    <span class="w-2 h-2 rounded-full bg-teal-500"></span>
+                    Activar Micrófono
+                </button>
+            {/if}
+        </div>
+    </main>
 </div>
