@@ -22,7 +22,7 @@
     let analyser: AnalyserNode | null = null;
     let detectPitch: any;
     let meydaAnalyzer: any = null;
-    let dataArray: Float32Array;
+    let dataArray: Float32Array<ArrayBuffer>;
 
     // Limit variables
     const boquillaLimit = 0.025;
@@ -69,6 +69,8 @@
     function loopProc() {
         if (!isListening || !analyser || !meydaAnalyzer) return;
 
+        analyser.getFloatTimeDomainData(dataArray);
+
         const characteristics = meydaAnalyzer.get('rms');
         const limit = boquillaMode ? boquillaLimit : cornetaLimit;
         const pitch = detectPitch(dataArray);
@@ -94,6 +96,9 @@
             desviation = 0;
             return;
         }
+
+        // continue loop
+        requestAnimationFrame(loopProc);
     }
 
     function stopAudio() {
@@ -117,6 +122,7 @@
     <main class="flex-1 grid grid-cols-2 divide-x divide-teal-800/40 p-8">
         <div class="flex flex-col items-center justify-center gap-8 px-8">
             <Afinacion />
+            Freq: {freqHz}
         </div>
 
         <div class="flex flex-col items-center justify-center gap-8 px-8">
