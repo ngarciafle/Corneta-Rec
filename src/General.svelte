@@ -1,7 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { YIN } from "pitchfinder";
-    import Meyda from "meyda";
 
     import Configuracion from "./components/Configuracion.svelte";
     import Afinacion from "./components/Afinacion.svelte";
@@ -51,15 +50,6 @@
 
             dataArray = new Float32Array(analyser.fftSize);
 
-            meydaAnalyzer = Meyda.createMeydaAnalyzer({
-                audioContext: audioContext,
-                source: audioSource,
-                bufferSize: 512,
-                featureExtractors: ['rms']
-            });
-
-            meydaAnalyzer.start();
-
             isListening = true;
             loopProc();
         } catch (err) {
@@ -69,28 +59,25 @@
     }
 
     function loopProc() {
-        if (!isListening || !analyser || !meydaAnalyzer) return;
+        if (!isListening || !analyser) return;
 
         analyser.getFloatTimeDomainData(dataArray);
 
-        const characteristics = meydaAnalyzer.get('rms');
+        const rms = getRMS(dataArray);
         const limit = boquillaMode ? boquillaLimit : cornetaLimit;
         const pitch = detectPitch(dataArray);
 
-        console.log('rms:', characteristics?.rms, 'limit:', limit, 'pitch:', pitch);
+        console.log('rms:', rms, 'limit:', limit, 'pitch:', pitch);
 
-        if (characteristics && characteristics.rms > limit) {
-            // pitch limitation
-            if (pitch && pitch > 60 && pitch < 600) {
-                freqHz = Math.round(pitch * 100) / 100;
-                
-                const exactNote = 12 * (Math.log2(freqHz / 440)) + 69;
-                const noteIndex = Math.round(exactNote) % 12;
-                const noteNames = ["Do", "Do#", "Re", "Re#", "Mi", "Fa", "Fa#", "Sol", "Sol#", "La", "La#", "Si"];
-                noteTxt = noteNames[noteIndex];
-                desviation = Math.round((exactNote - Math.round(exactNote)) * 100) / 100;
-            }
-
+       if (rms > limit) {
+        if (pitch && pitch > 60 && pitch < 600) {
+            freqHz = Math.round(pitch * 100) / 100;
+            const exactNote = 12 * (Math.log2(freqHz / 440)) + 69;
+            const noteIndex = Math.round(exactNote) % 12;
+            const noteNames = ["Do", "Do#", "Re", "Re#", "Mi", "Fa", "Fa#", "Sol", "Sol#", "La", "La#", "Si"];
+            noteTxt = noteNames[noteIndex];
+            desviation = Math.round((exactNote - Math.round(exactNote)) * 100) / 100;
+        }
             // I want to write the notes with band notation also **
 
         } else {
@@ -115,6 +102,14 @@
         freqHz = 0;
         noteTxt = '---';
         desviation = 0;
+    }
+
+    function getRMS(buffer: Float32Array): number {
+        let sum = 0;
+        for (let i = 0; i < buffer.length; i++) {
+            sum += buffer[i] * buffer[i];
+        }
+        return Math.sqrt(sum / buffer.length);
     }
 
 </script>

@@ -14,7 +14,6 @@
   "dependencies": {
     "@astrojs/svelte": "^8.1.1",
     "astro": "^6.3.7",
-    "meyda": "^5.6.3",
     "pitchfinder": "^2.3.4",
     "svelte": "^5.55.9",
     "tailwindcss": "^4.3.0",
