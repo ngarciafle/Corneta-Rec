@@ -41,13 +41,13 @@
       audioContext = new (window.AudioContext ||
         (window as any).webkitAudioContext)();
       detectPitch = YIN({
-        sampleRate: audioContext ? audioContext.sampleRate : 44100,
+        sampleRate: audioContext.sampleRate,
       });
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
       audioSource = audioContext.createMediaStreamSource(stream);
       analyser = audioContext.createAnalyser();
-      analyser.fftSize = 512;
+      analyser.fftSize = 2048;
       audioSource.connect(analyser);
 
       dataArray = new Float32Array(analyser.fftSize);
@@ -72,7 +72,7 @@
     console.log("rms:", rms, "limit:", limit, "pitch:", pitch);
 
     if (rms > limit) {
-      if (pitch && pitch > 60 && pitch < 1200) {
+      if (pitch && pitch > 60 && pitch < 600) {
         freqHz = Math.round(pitch * 100) / 100;
         noteTxt = getBandName(freqHz);
         // const exactNote = 12 * Math.log2(freqHz / 440) + 69;
