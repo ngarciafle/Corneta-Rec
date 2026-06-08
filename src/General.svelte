@@ -29,24 +29,24 @@
     const cornetaLimit = 0.01; 
 
     onMount(() => {
-        detectPitch = YIN({ sampleRate: 44100 });
         return () => stopAudio();
-
+        
     })
-
+    
     async function micConm() {
         if (isListening) {
             stopAudio();
             return;
         }
-
+        
         try {
             audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+            detectPitch = YIN({ sampleRate: audioContext ? audioContext.sampleRate : 44100 });
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
             audioSource = audioContext.createMediaStreamSource(stream);
             analyser = audioContext.createAnalyser();
-            analyser.fftSize = 2048;
+            analyser.fftSize = 512;
             audioSource.connect(analyser);
 
             dataArray = new Float32Array(analyser.fftSize);
@@ -57,6 +57,8 @@
                 bufferSize: 512,
                 featureExtractors: ['rms']
             });
+
+            meydaAnalyzer.start();
 
             isListening = true;
             loopProc();
@@ -74,6 +76,8 @@
         const characteristics = meydaAnalyzer.get('rms');
         const limit = boquillaMode ? boquillaLimit : cornetaLimit;
         const pitch = detectPitch(dataArray);
+
+        console.log('rms:', characteristics?.rms, 'limit:', limit, 'pitch:', pitch);
 
         if (characteristics && characteristics.rms > limit) {
             // pitch limitation
@@ -94,7 +98,6 @@
             freqHz = 0;
             noteTxt = '---';
             desviation = 0;
-            return;
         }
 
         // continue loop
