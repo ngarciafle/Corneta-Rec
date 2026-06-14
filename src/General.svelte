@@ -42,6 +42,7 @@
         (window as any).webkitAudioContext)();
       detectPitch = YIN({
         sampleRate: audioContext.sampleRate,
+        threshold: 0.15,
       });
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
@@ -67,11 +68,20 @@
 
     const rms = getRMS(dataArray);
     const limit = boquillaMode ? boquillaLimit : cornetaLimit;
-    const pitch = detectPitch(dataArray);
+    let pitch = detectPitch(dataArray);
 
     console.log("rms:", rms, "limit:", limit, "pitch:", pitch);
 
-    if (rms > limit) {
+    if (rms > limit && pitch) {
+
+      // Correcting pitch if it gets armonically confused with the first harmonic (octave)
+      if (pitch > 380 && pitch < 540) {
+        pitch = pitch / 3;
+
+        if (pitch < 120 || pitch > 150) {
+          pitch = pitch * 3 / 2;
+        }
+      }
       if (pitch && pitch > 60 && pitch < 600) {
         freqHz = Math.round(pitch * 100) / 100;
         noteTxt = getBandName(freqHz);
