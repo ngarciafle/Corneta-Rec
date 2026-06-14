@@ -168,11 +168,11 @@
 </script>
 
 <div class="w-full min-h-screen flex flex-col">
-  <Configuracion bind:boquillaMode />
+  <Configuracion/>
 
-  <main class="flex-1 grid grid-cols-2 divide-x divide-teal-800/40 p-8">
+  <main class="flex-1 grid">
     <div class="flex flex-col items-center justify-center gap-8 px-8">
-      <Afinacion />
+      <Afinacion bind:boquillaMode/>
       Freq: {freqHz}
     </div>
 
