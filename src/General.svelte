@@ -11,6 +11,7 @@
   let freqHz: number = $state(0);
   let noteTxt: string = $state("---");
   let desviation: number = $state(0);
+  let visible: boolean = $state(false);
 
   // Audio configuration variables
   let boquillaMode: boolean = $state(false);
@@ -168,16 +169,16 @@
 </script>
 
 <div class="w-full min-h-screen flex flex-col">
-  <Configuracion/>
+  <Configuracion {boquillaMode} {visible}/>
 
   <main class="flex-1 grid">
     <div class="flex flex-col items-center justify-center gap-8 px-8">
-      <Afinacion bind:boquillaMode/>
+      <Nota {noteTxt} />
+      <!-- <Afinacion bind:boquillaMode/> -->
       Freq: {freqHz}
     </div>
 
     <div class="flex flex-col items-center justify-center gap-8 px-8">
-      <Nota {noteTxt} />
 
       {#if isListening}
         <button
