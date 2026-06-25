@@ -49,7 +49,7 @@
 
       audioSource = audioContext.createMediaStreamSource(stream);
       analyser = audioContext.createAnalyser();
-      analyser.fftSize = 2048;
+      analyser.fftSize = 8192;
       audioSource.connect(analyser);
 
       dataArray = new Float32Array(analyser.fftSize);
@@ -65,53 +65,62 @@
   function loopProc() {
     if (!isListening || !analyser) return;
 
-    analyser.getFloatTimeDomainData(dataArray);
+    const result = detectCornetNoteByTemplate(analyser, audioContext!.sampleRate);
 
-    const rms = getRMS(dataArray);
-    const limit = boquillaMode ? boquillaLimit : cornetaLimit;
-    let pitch = detectPitch(dataArray);
-
-    console.log("rms:", rms, "limit:", limit, "pitch:", pitch);
-
-    if (rms > limit && pitch) {
-
-      // Correcting pitch if it gets armonically confused with the first harmonic (octave)
-      if (pitch > 380 && pitch < 540) {
-        pitch = pitch / 3;
-
-        if (pitch < 120 || pitch > 150) {
-          pitch = pitch * 3 / 2;
-        }
-      }
-      if (pitch && pitch > 60 && pitch < 600) {
-        freqHz = Math.round(pitch * 100) / 100;
-        noteTxt = getBandName(freqHz);
-        // const exactNote = 12 * Math.log2(freqHz / 440) + 69;
-        // const noteIndex = Math.round(exactNote) % 12;
-        // const noteNames = [
-        //   "Do",
-        //   "Do#",
-        //   "Re",
-        //   "Re#",
-        //   "Mi",
-        //   "Fa",
-        //   "Fa#",
-        //   "Sol",
-        //   "Sol#",
-        //   "La",
-        //   "La#",
-        //   "Si",
-        // ];
-        // noteTxt = noteNames[noteIndex];
-        // desviation = Math.round((exactNote - Math.round(exactNote)) * 100) / 100;
-      }
-      // I want to write the notes with band notation also **
+    if (result && result.confidence > 40) {
+      noteTxt = result.note;
+      // ** WITHOUT FREQUENCY DETECTION, JUST NOTE DETECTION
     } else {
-      // Sound below the limit, reset values
       freqHz = 0;
       noteTxt = "---";
       desviation = 0;
     }
+
+    // const rms = getRMS(dataArray);
+    // const limit = boquillaMode ? boquillaLimit : cornetaLimit;
+    // let pitch = detectPitch(dataArray);
+
+    // console.log("rms:", rms, "limit:", limit, "pitch:", pitch);
+
+    // if (rms > limit && pitch) {
+
+    //   // Correcting pitch if it gets armonically confused with the first harmonic (octave)
+    //   if (pitch > 380 && pitch < 540) {
+    //     pitch = pitch / 3;
+
+    //     if (pitch < 120 || pitch > 150) {
+    //       pitch = pitch * 3 / 2;
+    //     }
+    //   }
+    //   if (pitch && pitch > 60 && pitch < 600) {
+    //     freqHz = Math.round(pitch * 100) / 100;
+    //     noteTxt = getBandName(freqHz);
+    //     // const exactNote = 12 * Math.log2(freqHz / 440) + 69;
+    //     // const noteIndex = Math.round(exactNote) % 12;
+    //     // const noteNames = [
+    //     //   "Do",
+    //     //   "Do#",
+    //     //   "Re",
+    //     //   "Re#",
+    //     //   "Mi",
+    //     //   "Fa",
+    //     //   "Fa#",
+    //     //   "Sol",
+    //     //   "Sol#",
+    //     //   "La",
+    //     //   "La#",
+    //     //   "Si",
+    //     // ];
+    //     // noteTxt = noteNames[noteIndex];
+    //     // desviation = Math.round((exactNote - Math.round(exactNote)) * 100) / 100;
+    //   }
+    //   // I want to write the notes with band notation also **
+    // } else {
+    //   // Sound below the limit, reset values
+    //   freqHz = 0;
+    //   noteTxt = "---";
+    //   desviation = 0;
+    // }
 
     // continue loop
     requestAnimationFrame(loopProc);
@@ -136,6 +145,10 @@
       sum += buffer[i] * buffer[i];
     }
     return Math.sqrt(sum / buffer.length);
+  }
+
+  function detectCornetNoteByTemplate(analyser: AnalyserNode, sampleRate: number) : { note: string; confidence: number } | null {
+    return null;
   }
 
   function getBandName(freq: number): string {
