@@ -106,6 +106,8 @@
 
     if (result && result.confidence > 40) {
       noteTxt = result.numero;
+      freqHz = result.freq;
+      console.log(freqHz);
     } else {
       freqHz = 0;
       noteTxt = "---";
