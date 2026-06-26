@@ -13,6 +13,7 @@
   let desviation: number = $state(0);
   let visible: boolean = $state(false);
 
+
   // Audio configuration variables
   let boquillaMode: boolean = $state(false);
 
@@ -108,6 +109,7 @@
       noteTxt = result.numero;
       freqHz = result.freq;
       console.log(freqHz);
+      desviation = result.confidence;
     } else {
       freqHz = 0;
       noteTxt = "---";
@@ -279,6 +281,7 @@
       <Nota {noteTxt} />
       <!-- <Afinacion bind:boquillaMode/> -->
       Freq: {freqHz}
+      Confidence: {desviation}%
     </div>
 
     <div class="flex flex-col items-center justify-center gap-8 px-8">
