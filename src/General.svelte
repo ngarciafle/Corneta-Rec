@@ -112,7 +112,7 @@
   function loopProc() {
     if (!isListening || !analyser || !pitchDetector || !audioContext) return;
 
-    analyser.getFloatFrequencyData(dataArray);
+    analyser.getFloatTimeDomainData(dataArray);
 
       const [pitch, clarity] = pitchDetector.findPitch(
       dataArray,
