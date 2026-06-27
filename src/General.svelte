@@ -1,10 +1,19 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { YIN } from "pitchfinder";
-
+  // import { YIN } from "pitchfinder";
+  import { PitchDetector } from "pitchy";
+  
   import Configuracion from "./components/Configuracion.svelte";
   import Afinacion from "./components/Afinacion.svelte";
   import Nota from "./components/Nota.svelte";
+  
+  // Interface
+  interface Note {
+    numero: string;
+    nombre: string;
+    freq: number;
+    boquillaOnly: boolean;
+  }
 
   // Reactive variables
   let isListening: boolean = $state(false);
@@ -13,7 +22,6 @@
   let desviation: number = $state(0);
   let visible: boolean = $state(false);
 
-
   // Audio configuration variables
   let boquillaMode: boolean = $state(false);
 
@@ -21,45 +29,39 @@
   let audioContext: AudioContext | null = null;
   let audioSource: MediaStreamAudioSourceNode | null = null;
   let analyser: AnalyserNode | null = null;
-  let detectPitch: any;
   let meydaAnalyzer: any = null;
   let dataArray: Float32Array<ArrayBuffer>;
+  let pitchDetector: PitchDetector<Float32Array> | null = null;
+
 
   // Limit variables
   const boquillaLimit = 0.025;
   const cornetaLimit = 0.01;
+  const CORNET_MIN_HZ = 220;
+  const CORNET_MAX_HZ = 1700; 
+  const TOLERANCE_CENTS = 60;
 
   // Notes
   const CORNET_HARMONICS: Note[] = [
-    { numero: "2*", nombre: "Si3",   freq: 246.94, boquillaOnly: true  },
-    { numero: "2",  nombre: "Do4",   freq: 261.63, boquillaOnly: false },
-
-    { numero: "3*", nombre: "Fa#4",  freq: 369.99, boquillaOnly: true  },
-    { numero: "3",  nombre: "Sol4",  freq: 392.00, boquillaOnly: false },
-
-    { numero: "4*", nombre: "Si4",   freq: 493.88, boquillaOnly: true  },
-    { numero: "4",  nombre: "Do5",   freq: 523.25, boquillaOnly: false },
-
-    { numero: "5*", nombre: "Re#5",  freq: 622.25, boquillaOnly: true  },
-    { numero: "5",  nombre: "Mi5",   freq: 659.26, boquillaOnly: false },
-
-    { numero: "6*", nombre: "Fa#5",  freq: 739.99, boquillaOnly: true  },
-    { numero: "6",  nombre: "Sol5",  freq: 783.99, boquillaOnly: false },
-
-    { numero: "7*", nombre: "La5",   freq: 880.00, boquillaOnly: true  },
-    { numero: "7",  nombre: "Sib5",  freq: 932.33, boquillaOnly: false },
-
-    { numero: "8*", nombre: "Si5",   freq: 987.77, boquillaOnly: true  },
-    { numero: "8",  nombre: "Do6",   freq: 1046.50, boquillaOnly: false },
+    { numero: "2*", nombre: "Si3", freq: 246.94, boquillaOnly: true },
+    { numero: "2", nombre: "Do4", freq: 261.63, boquillaOnly: false },
+    { numero: "3*", nombre: "Fa#4", freq: 369.99, boquillaOnly: true },
+    { numero: "3", nombre: "Sol4", freq: 392.0, boquillaOnly: false },
+    { numero: "4*", nombre: "Si4", freq: 493.88, boquillaOnly: true },
+    { numero: "4", nombre: "Do5", freq: 523.25, boquillaOnly: false },
+    { numero: "5*", nombre: "Re#5", freq: 622.25, boquillaOnly: true },
+    { numero: "5", nombre: "Mi5", freq: 659.26, boquillaOnly: false },
+    { numero: "6*", nombre: "Fa#5", freq: 739.99, boquillaOnly: true },
+    { numero: "6", nombre: "Sol5", freq: 783.99, boquillaOnly: false },
+    { numero: "7*", nombre: "La5", freq: 880.0, boquillaOnly: true },
+    { numero: "7", nombre: "Sib5", freq: 932.33, boquillaOnly: false },
+    { numero: "8*", nombre: "Si5", freq: 987.77, boquillaOnly: true },
+    { numero: "8", nombre: "Do6", freq: 1046.5, boquillaOnly: false },
+    { numero: "9*", nombre: "Mi6", freq: 1318.51, boquillaOnly: true },
+    { numero: "9", nombre: "Fa6", freq: 1396.91, boquillaOnly: false },
+    { numero: "10*", nombre: "Fa#6", freq: 1479.98, boquillaOnly: true },
+    { numero: "10", nombre: "Sol6", freq: 1567.98, boquillaOnly: false },
   ];
-
-  // Interface
-  interface Note {
-    numero: string;
-    nombre: string;
-    freq: number;
-    boquillaOnly: boolean;
-  }
 
 
   onMount(() => {
@@ -75,18 +77,25 @@
     try {
       audioContext = new (window.AudioContext ||
         (window as any).webkitAudioContext)();
-      detectPitch = YIN({
-        sampleRate: audioContext.sampleRate,
-        threshold: 0.15,
-      });
+
+      // YIN VERSION
+      // detectPitch = YIN({
+      //   sampleRate: audioContext.sampleRate,
+      //   threshold: 0.15,
+      // });
+      
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
       audioSource = audioContext.createMediaStreamSource(stream);
       analyser = audioContext.createAnalyser();
-      analyser.fftSize = 8192;
+      analyser.fftSize = 2048;
       audioSource.connect(analyser);
 
       dataArray = new Float32Array(analyser.fftSize);
+
+      pitchDetector = PitchDetector.forFloat32Array(analyser.fftSize);
+      pitchDetector.clarityThreshold = 0.9;
+      pitchDetector.minVolumeDecibels = -35;
 
       isListening = true;
       loopProc();
@@ -101,21 +110,52 @@
   }
 
   function loopProc() {
-    if (!isListening || !analyser) return;
+    if (!isListening || !analyser || !pitchDetector || !audioContext) return;
 
-    const result = detectCornetNoteByTemplate(analyser, audioContext!.sampleRate);
+    analyser.getFloatFrequencyData(dataArray);
 
-    if (result && result.confidence > 40) {
-      noteTxt = result.numero;
-      freqHz = result.freq;
-      console.log(freqHz);
-      desviation = result.confidence;
+      const [pitch, clarity] = pitchDetector.findPitch(
+      dataArray,
+      audioContext.sampleRate
+    );
+ 
+    console.log("pitch:", pitch.toFixed(2), "clarity:", clarity.toFixed(3));
+ 
+    // clarity 0 = silencio o ruido; ademas acotamos al rango real de la corneta
+    if (clarity > 0 && pitch >= CORNET_MIN_HZ && pitch <= CORNET_MAX_HZ) {
+      freqHz = Math.round(pitch * 100) / 100;
+ 
+      const result = freqToCornetNote(freqHz, boquillaMode);
+      if (result) {
+        noteTxt = result.numero;
+        desviation = result.cents;
+      } else {
+        // Esta dentro del rango pero no coincide con ninguna nota conocida
+        noteTxt = "---";
+        desviation = 0;
+      }
     } else {
+      // Sin señal clara o fuera de rango, reset
       freqHz = 0;
       noteTxt = "---";
       desviation = 0;
     }
 
+    // SECOND VERSION
+    // const result = detectCornetNoteByTemplate(analyser, audioContext!.sampleRate);
+
+    // if (result && result.confidence > 40) {
+    //   noteTxt = result.numero;
+    //   freqHz = result.freq;
+    //   console.log(freqHz);
+    //   desviation = result.confidence;
+    // } else {
+    //   freqHz = 0;
+    //   noteTxt = "---";
+    //   desviation = 0;
+    // }
+
+    // FIRST VERSION
     // const rms = getRMS(dataArray);
     // const limit = boquillaMode ? boquillaLimit : cornetaLimit;
     // let pitch = detectPitch(dataArray);
@@ -166,6 +206,40 @@
     requestAnimationFrame(loopProc);
   }
 
+  function hzToCents(freq: number, reference: number): number {
+    return 1200 * Math.log2(freq / reference);
+  }
+
+  function freqToCornetNote(
+    freq: number,
+    boquillaMode: boolean
+  ): { numero: string; nombre: string; cents: number } | null {
+    const candidates = CORNET_HARMONICS.filter(
+      (note) => !note.boquillaOnly || !boquillaMode
+    );
+ 
+    let best: Note | null = null;
+    let bestAbsCents = Infinity;
+ 
+    for (const note of candidates) {
+      const cents = Math.abs(hzToCents(freq, note.freq));
+      if (cents < bestAbsCents) {
+        bestAbsCents = cents;
+        best = note;
+      }
+    }
+ 
+    if (!best || bestAbsCents > TOLERANCE_CENTS) return null;
+ 
+    const centsReal = hzToCents(freq, best.freq);
+ 
+    return {
+      numero: best.numero,
+      nombre: best.nombre,
+      cents: Math.round(centsReal),
+    };
+  }
+
   function stopAudio() {
     isListening = false;
     if (meydaAnalyzer) meydaAnalyzer.stop();
@@ -179,6 +253,7 @@
     desviation = 0;
   }
 
+  // FIRST VERSION
   // function getRMS(buffer: Float32Array): number {
   //   let sum = 0;
   //   for (let i = 0; i < buffer.length; i++) {
@@ -242,35 +317,6 @@
   return score;
 }
 
-  // WRONG CALCSS :/
-  // function getBandName(freq: number): string {
-  //   if (!freq || freq <= 0) return "---";
-
-  //   // Registro Grave (Los Bajos)
-  //   if (freq >= 88 && freq < 95 && !boquillaMode) return "2*"; // Fa# (Llave pulsada)
-  //   if (freq >= 95 && freq < 110) return "2"; // Sol (Llave suelta)
-
-  //   // Registro Medio (Segundas y transiciones)
-  //   if (freq >= 118 && freq < 128 && !boquillaMode) return "3*"; // Sib (Llave pulsada)
-  //   if (freq >= 128 && freq < 145) return "3"; // Do  (Llave suelta)
-  //   if (freq >= 150 && freq < 161 && !boquillaMode) return "4*"; // Re  (Llave pulsada)
-  //   if (freq >= 161 && freq < 178) return "4"; // Mi  (Llave suelta)
-
-  //   // Registro Agudo (Primeras)
-  //   if (freq >= 180 && freq < 192 && !boquillaMode) return "5*"; // Fa  (Llave pulsada)
-  //   if (freq >= 192 && freq < 210) return "5"; // Sol (Llave suelta)
-
-  //   if (freq >= 215 && freq < 226 && !boquillaMode) return "6*"; // La  (Llave pulsada)
-  //   if (freq >= 226 && freq < 242) return "6"; // Sib (Llave suelta)
-
-  //   // Registro Superagudo (El Pájaro y agudos modernos)
-  //   if (freq >= 242 && freq < 255 && !boquillaMode) return "7*"; // Sib agudo con llave
-  //   if (freq >= 255 && freq < 275) return "7"; // Do agudo ("Pájaro")
-
-  //   if (freq >= 275) return "¡Agudo Extremo!";
-
-  //   return "---";
-  // }
 </script>
 
 <div class="w-full min-h-screen flex flex-col">

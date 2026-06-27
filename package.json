@@ -15,6 +15,7 @@
     "@astrojs/svelte": "^8.1.1",
     "astro": "^6.3.7",
     "pitchfinder": "^2.3.4",
+    "pitchy": "^4.1.0",
     "svelte": "^5.55.9",
     "tailwindcss": "^4.3.0",
     "typescript": "^6.0.3"

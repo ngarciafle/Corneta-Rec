@@ -17,6 +17,9 @@ importers:
       pitchfinder:
         specifier: ^2.3.4
         version: 2.3.4
+      pitchy:
+        specifier: ^4.1.0
+        version: 4.1.0
       svelte:
         specifier: ^5.55.9
         version: 5.55.9
@@ -1017,6 +1020,9 @@ packages:
       picomatch:
         optional: true
 
+  fft.js@4.0.4:
+    resolution: {integrity: sha512-f9c00hphOgeQTlDyavwTtu6RiK8AIFjD6+jvXkNkpeQ7rirK3uFWVpalkoS4LAwbdX7mfZ8aoBfFVQX1Re/8aw==}
+
   fftjs@0.0.4:
     resolution: {integrity: sha512-nIWxQyth1LVD6NH8a+YZUv+McjzbOY6dMe4wv6Pq5cGfP+c8Rd1T8Dsd50DCWlNgzSqA3y9lOkpD6dZD3qHa1A==}
 
@@ -1468,6 +1474,9 @@ packages:
 
   pitchfinder@2.3.4:
     resolution: {integrity: sha512-GK1bWPaS1p2fB8ZUh1qXi/6iA55qxLoAS9NgqvReM5+tlUr1ch3dJvO9pikp7qpWLI7FlQBQhsl9eOwR6GAPwg==}
+
+  pitchy@4.1.0:
+    resolution: {integrity: sha512-E8nQ8svBroGSMcc3qu2KvLHIuRYAIfrSkqDKWhjgj3WizseqWQXjQ+Q5t4g1CU73R5Euk+DAinyNFDK+KZw7zA==}
 
   postcss@8.5.15:
     resolution: {integrity: sha512-FfR8sjd4em2T6fb3I2MwAJU7HWVMr9zba+enmQeeWFfCbm+UOC/0X4DS8XtpUTMwWMGbjKYP7xjfNekzyGmB3A==}
@@ -2705,6 +2714,8 @@ snapshots:
     optionalDependencies:
       picomatch: 4.0.4
 
+  fft.js@4.0.4: {}
+
   fftjs@0.0.4:
     dependencies:
       babel-plugin-add-module-exports: 0.2.1
@@ -3353,6 +3364,10 @@ snapshots:
   picomatch@4.0.4: {}
 
   pitchfinder@2.3.4: {}
+
+  pitchy@4.1.0:
+    dependencies:
+      fft.js: 4.0.4
 
   postcss@8.5.15:
     dependencies:
